@@ -1,0 +1,96 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CLIENT
+  WORKER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+  MODIFIED
+}
+
+enum LeaveType {
+  SICK_LEAVE
+  ANNUAL_LEAVE
+  UNPAID_LEAVE
+}
+
+enum PaymentStatus {
+  SUCCESSFUL
+  PENDING
+  REFUNDED
+}
+
+// Table name convention:
+// 1. snake_case (using lower case, space is replaced by underscore)
+// 2. singular form (user, not users)
+
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  phone_number String   @db.VarChar(255)
+  password     String   @db.VarChar(255)
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // locations UserLocation[] // Connects User to many Locations (Many-to-Many)
+  // Locations[]  locations  @relation(fields: [user_id], references: [id])
+  // Bookings[]   workerBookings  # Worker bookings assigned to this user
+  // WorkerHours[] workerHours  # Worker's work hours (if user is a worker)
+  // Leaves[]     leaves
+  UserLocation UserLocation?
+
+  @@map("user")
+}
+
+model Location {
+  id               String        @id @default(uuid())
+  address          String        @db.Text
+  number_bathrooms Int           @db.Integer
+  number_desks     Int           @db.Integer
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  UserLocation     UserLocation?
+
+  @@map("location")
+}
+
+model UserLocation {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user_id     String   @unique // Foreign key to User (user has many locations)
+  location_id String   @unique // Foreign key to Location (location can be used by many users)
+
+  user     User     @relation(fields: [user_id], references: [id])
+  location Location @relation(fields: [location_id], references: [id])
+
+  @@map("user_location")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(255)
+  description String   @db.Text
+  base_price  Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Bookings[]  bookings
+
+  @@map("service")
+}
