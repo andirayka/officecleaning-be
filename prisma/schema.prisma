@@ -33,52 +33,58 @@ enum PaymentStatus {
   REFUNDED
 }
 
-// Table name convention:
-// 1. snake_case (using lower case, space is replaced by underscore)
+// Table name convention (@@map):
+// 1. snake_case (using lowercase, space is replaced by underscore)
 // 2. singular form (user, not users)
 
-model User {
-  id           String   @id @default(uuid())
-  name         String   @db.VarChar(255)
-  email        String   @unique @db.VarChar(255)
-  phone_number String   @db.VarChar(255)
-  password     String   @db.VarChar(255)
-  role         Role     @default(CLIENT)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// Model name convention:
+// 1. camelCase (first word is lowercase, then capital case without space)
+// singular form or plural form depends on the object. If multiple objects, then plural
 
-  // locations UserLocation[] // Connects User to many Locations (Many-to-Many)
-  // Locations[]  locations  @relation(fields: [user_id], references: [id])
+model User {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  email       String   @unique @db.VarChar(255)
+  phoneNumber String   @db.VarChar(255)
+  password    String   @db.VarChar(255)
+  role        Role     @default(CLIENT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userLocations UserLocation[]
+
+  // Locations[]  locations  @relation(fields: [userId], references: [id])
   // Bookings[]   workerBookings  # Worker bookings assigned to this user
   // WorkerHours[] workerHours  # Worker's work hours (if user is a worker)
   // Leaves[]     leaves
-  UserLocation UserLocation?
 
   @@map("user")
 }
 
 model Location {
-  id               String        @id @default(uuid())
-  address          String        @db.Text
-  number_bathrooms Int           @db.Integer
-  number_desks     Int           @db.Integer
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  UserLocation     UserLocation?
+  id             String   @id @default(uuid())
+  address        String   @db.Text
+  bathroomNumber Int      @db.Integer
+  deskNumber     Int      @db.Integer
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  userLocations UserLocation[]
 
   @@map("location")
 }
 
 model UserLocation {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user_id     String   @unique // Foreign key to User (user has many locations)
-  location_id String   @unique // Foreign key to Location (location can be used by many users)
+  id         String   @id @default(uuid())
+  userId     String
+  locationId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user     User     @relation(fields: [user_id], references: [id])
-  location Location @relation(fields: [location_id], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
 
+  @@unique([userId, locationId])
   @@map("user_location")
 }
 
@@ -86,7 +92,7 @@ model Service {
   id          String   @id @default(uuid())
   name        String   @unique @db.VarChar(255)
   description String   @db.Text
-  base_price  Decimal
+  basePrice   Decimal
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
