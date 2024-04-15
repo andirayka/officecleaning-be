@@ -42,19 +42,19 @@ enum PaymentStatus {
 // singular form or plural form depends on the object. If multiple objects, then plural
 
 model User {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
-  email       String   @unique @db.VarChar(255)
-  phoneNumber String   @db.VarChar(255)
-  password    String   @db.VarChar(255)
-  role        Role     @default(CLIENT)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  userLocations UserLocation[]
+  id             String         @id @default(uuid())
+  name           String         @db.VarChar(255)
+  email          String         @unique @db.VarChar(255)
+  phoneNumber    String         @db.VarChar(255)
+  password       String         @db.VarChar(255)
+  role           Role           @default(CLIENT)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  userLocations  UserLocation[]
+  clientBookings Booking[]      @relation("ClientBookings")
+  workerBookings Booking[]      @relation("WorkerBookings")
 
   // Locations[]  locations  @relation(fields: [userId], references: [id])
-  // Bookings[]   workerBookings  # Worker bookings assigned to this user
   // WorkerHours[] workerHours  # Worker's work hours (if user is a worker)
   // Leaves[]     leaves
 
@@ -62,14 +62,14 @@ model User {
 }
 
 model Location {
-  id             String   @id @default(uuid())
-  address        String   @db.Text
-  bathroomNumber Int      @db.Integer
-  deskNumber     Int      @db.Integer
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  userLocations UserLocation[]
+  id             String         @id @default(uuid())
+  address        String         @db.Text
+  bathroomNumber Int            @db.Integer
+  deskNumber     Int            @db.Integer
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  userLocations  UserLocation[]
+  booking        Booking?
 
   @@map("location")
 }
@@ -80,23 +80,47 @@ model UserLocation {
   locationId String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  user     User     @relation(fields: [userId], references: [id])
-  location Location @relation(fields: [locationId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
 
   @@unique([userId, locationId])
   @@map("user_location")
 }
 
-model Service {
-  id          String   @id @default(uuid())
-  name        String   @unique @db.VarChar(255)
-  description String   @db.Text
-  basePrice   Decimal
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Booking {
+  id                   String        @id @default(uuid())
+  client_id            String        @unique
+  worker_id            String?       @unique
+  service_id           String        @unique
+  location_id          String        @unique
+  date_time            DateTime
+  estimated_arrival    DateTime
+  original_date_time   DateTime?
+  original_location_id String?
+  price                Decimal
+  status               BookingStatus
+  rating               Int?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  client               User          @relation("ClientBookings", fields: [client_id], references: [id])
+  worker               User?         @relation("WorkerBookings", fields: [worker_id], references: [id])
+  service              Service       @relation(fields: [service_id], references: [id])
+  location             Location      @relation(fields: [location_id], references: [id])
 
-  // Bookings[]  bookings
+  // WorkerHours[]  workerHours
+  // BookingHistory[] bookingHistory
+
+  @@map("booking")
+}
+
+model Service {
+  id          String    @id @default(uuid())
+  name        String    @unique @db.VarChar(255)
+  description String    @db.Text
+  basePrice   Decimal
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
 
   @@map("service")
 }
