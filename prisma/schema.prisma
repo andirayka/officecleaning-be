@@ -41,6 +41,7 @@ enum PaymentStatus {
 // 1. camelCase (first word is lowercase, then capital case without space)
 // singular form or plural form depends on the object. If multiple objects, then plural
 
+// Can be client, worker, or admin
 model User {
   id             String           @id @default(uuid())
   name           String           @db.VarChar(255)
@@ -54,11 +55,31 @@ model User {
   clientBookings Booking[]        @relation("ClientBookings")
   workerBookings Booking[]        @relation("WorkerBookings")
   bookingHistory BookingHistory[]
+  workerHours    WorkerHours[]
 
-  // WorkerHours[] workerHours  # Worker's work hours (if user is a worker)
   // Leaves[]     leaves
 
   @@map("user")
+}
+
+// Track worker assignments and their working hours for each booking. 
+// This data is crucial for various aspects of cleaning service application, such as:
+// Payroll: Calculating worker pay based on the hours they worked on bookings.
+// Billing: Determining the total cost of a booking based on worker hours and their associated rates.
+// Scheduling: Analyzing worker availability and workload based on existing and upcoming bookings.
+// Analytics: Understanding worker performance and identifying trends in booking durations.
+model WorkerHours {
+  id        String   @id @default(uuid())
+  workerId  String   @unique
+  bookingId String   @unique
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  worker    User     @relation(fields: [workerId], references: [id])
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+
+  @@map("worker_hours")
 }
 
 model Location {
@@ -74,10 +95,12 @@ model Location {
   @@map("location")
 }
 
+// Connector between User and Location
+// User and Location have many-to-many relationship
 model UserLocation {
   id         String   @id @default(uuid())
-  userId     String
-  locationId String
+  userId     String   @unique
+  locationId String   @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id])
@@ -88,11 +111,11 @@ model UserLocation {
 }
 
 model Booking {
-  id                 String        @id @default(uuid())
-  clientId           String        @unique
-  workerId           String?       @unique
-  serviceId          String        @unique
-  locationId         String        @unique
+  id                 String           @id @default(uuid())
+  clientId           String           @unique
+  workerId           String?          @unique
+  serviceId          String           @unique
+  locationId         String           @unique
   dateTime           DateTime
   estimatedArrival   DateTime
   originalDateTime   DateTime?
@@ -100,19 +123,19 @@ model Booking {
   price              Decimal
   status             BookingStatus
   rating             Int?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  client             User          @relation("ClientBookings", fields: [clientId], references: [id])
-  worker             User?         @relation("WorkerBookings", fields: [workerId], references: [id])
-  service            Service       @relation(fields: [serviceId], references: [id])
-  location           Location      @relation(fields: [locationId], references: [id])
-
-  // WorkerHours[]  workerHours
-  // BookingHistory[] bookingHistory
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  client             User             @relation("ClientBookings", fields: [clientId], references: [id])
+  worker             User?            @relation("WorkerBookings", fields: [workerId], references: [id])
+  service            Service          @relation(fields: [serviceId], references: [id])
+  location           Location         @relation(fields: [locationId], references: [id])
+  workerHours        WorkerHours[]
+  bookingHistory     BookingHistory[]
 
   @@map("booking")
 }
 
+// Record of booking
 model BookingHistory {
   id           String    @id @default(uuid())
   bookingId    String    @unique
@@ -122,11 +145,13 @@ model BookingHistory {
   changedAt    DateTime? @default(now())
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  booking      Booking   @relation(fields: [bookingId], references: [id])
   changer      User?     @relation(fields: [changerId], references: [id])
 
   @@map("booking_history")
 }
 
+// Available service for clients
 model Service {
   id          String    @id @default(uuid())
   name        String    @unique @db.VarChar(255)
