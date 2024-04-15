@@ -17,8 +17,11 @@ enum BookingStatus {
   PENDING
   ACCEPTED
   COMPLETED
-  CANCELLED
-  MODIFIED
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_WORKER
+  CANCELLED_BY_ADMIN
+  MODIFIED_COMPLETED
+  MODIFIED_CANCELLED
 }
 
 enum LeaveType {
@@ -56,8 +59,7 @@ model User {
   workerBookings Booking[]        @relation("WorkerBookings")
   bookingHistory BookingHistory[]
   workerHours    WorkerHours[]
-
-  // Leaves[]     leaves
+  leaves         Leave[]
 
   @@map("user")
 }
@@ -80,6 +82,21 @@ model WorkerHours {
   booking   Booking  @relation(fields: [bookingId], references: [id])
 
   @@map("worker_hours")
+}
+
+// Provides a historical record of past leave requests for reference and future planning.
+// During the leave period, the worker is marked as unavailable for booking assignments.
+model Leave {
+  id        String    @id @default(uuid())
+  workerId  String    @unique
+  type      LeaveType
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  worker    User      @relation(fields: [workerId], references: [id])
+
+  @@map("leave")
 }
 
 model Location {
