@@ -42,19 +42,19 @@ enum PaymentStatus {
 // singular form or plural form depends on the object. If multiple objects, then plural
 
 model User {
-  id             String         @id @default(uuid())
-  name           String         @db.VarChar(255)
-  email          String         @unique @db.VarChar(255)
-  phoneNumber    String         @db.VarChar(255)
-  password       String         @db.VarChar(255)
-  role           Role           @default(CLIENT)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id             String           @id @default(uuid())
+  name           String           @db.VarChar(255)
+  email          String           @unique @db.VarChar(255)
+  phoneNumber    String           @db.VarChar(255)
+  password       String           @db.VarChar(255)
+  role           Role             @default(CLIENT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   userLocations  UserLocation[]
-  clientBookings Booking[]      @relation("ClientBookings")
-  workerBookings Booking[]      @relation("WorkerBookings")
+  clientBookings Booking[]        @relation("ClientBookings")
+  workerBookings Booking[]        @relation("WorkerBookings")
+  bookingHistory BookingHistory[]
 
-  // Locations[]  locations  @relation(fields: [userId], references: [id])
   // WorkerHours[] workerHours  # Worker's work hours (if user is a worker)
   // Leaves[]     leaves
 
@@ -88,29 +88,43 @@ model UserLocation {
 }
 
 model Booking {
-  id                   String        @id @default(uuid())
-  client_id            String        @unique
-  worker_id            String?       @unique
-  service_id           String        @unique
-  location_id          String        @unique
-  date_time            DateTime
-  estimated_arrival    DateTime
-  original_date_time   DateTime?
-  original_location_id String?
-  price                Decimal
-  status               BookingStatus
-  rating               Int?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  client               User          @relation("ClientBookings", fields: [client_id], references: [id])
-  worker               User?         @relation("WorkerBookings", fields: [worker_id], references: [id])
-  service              Service       @relation(fields: [service_id], references: [id])
-  location             Location      @relation(fields: [location_id], references: [id])
+  id                 String        @id @default(uuid())
+  clientId           String        @unique
+  workerId           String?       @unique
+  serviceId          String        @unique
+  locationId         String        @unique
+  dateTime           DateTime
+  estimatedArrival   DateTime
+  originalDateTime   DateTime?
+  originalLocationId String?
+  price              Decimal
+  status             BookingStatus
+  rating             Int?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  client             User          @relation("ClientBookings", fields: [clientId], references: [id])
+  worker             User?         @relation("WorkerBookings", fields: [workerId], references: [id])
+  service            Service       @relation(fields: [serviceId], references: [id])
+  location           Location      @relation(fields: [locationId], references: [id])
 
   // WorkerHours[]  workerHours
   // BookingHistory[] bookingHistory
 
   @@map("booking")
+}
+
+model BookingHistory {
+  id           String    @id @default(uuid())
+  bookingId    String    @unique
+  changerId    String?   @unique
+  changeReason String?
+  changes      Json?
+  changedAt    DateTime? @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  changer      User?     @relation(fields: [changerId], references: [id])
+
+  @@map("booking_history")
 }
 
 model Service {
