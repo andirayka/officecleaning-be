@@ -140,7 +140,7 @@ model Booking {
   originalLocationId String?
   price              Decimal
   status             BookingStatus
-  rating             Int?
+  rating             Int?             @db.SmallInt
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   client             User             @relation("ClientBookings", fields: [clientId], references: [id])
@@ -158,7 +158,7 @@ model BookingHistory {
   id           String    @id @default(uuid())
   bookingId    String    @unique
   changerId    String?   @unique
-  changeReason String?
+  changeReason String?   @db.Text
   changes      Json?
   changedAt    DateTime? @default(now())
   createdAt    DateTime  @default(now())
