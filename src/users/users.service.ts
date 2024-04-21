@@ -72,6 +72,7 @@ export class UsersService {
       validatedReq.password,
       user.password,
     );
+    // Wrong password
     if (!isPasswordValid) {
       throw new HttpException('Username or password is invalid', 401);
     }
@@ -86,6 +87,7 @@ export class UsersService {
       name: user.name,
       phone: user.phone,
       role: user.role,
+      token: user.token,
     };
   }
 

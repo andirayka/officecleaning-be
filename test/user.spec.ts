@@ -73,15 +73,69 @@ describe('UserController', () => {
       expect(res.body.errors).toBeDefined();
     });
 
-    it('Should delete registered user', async () => {
-      const res = await request(app.getHttpServer())
+    // Delete user
+    afterAll(async () => {
+      await request(app.getHttpServer())
         .delete('/users/delete-user-by-email')
         .send({ email: test_email });
+    });
+  });
+
+  describe('POST /users/login', () => {
+    // Register user
+    beforeAll(async () => {
+      await request(app.getHttpServer()).post('/users/register').send({
+        email: test_email,
+        name: 'Wahyudi',
+        phone: '089123456789',
+        password: 'password',
+        role: 'CLIENT',
+      });
+    });
+
+    it('Should be rejected if request is invalid', async () => {
+      const res = await request(app.getHttpServer()).post('/users/login').send({
+        email: '',
+        password: '',
+      });
+
+      logger.info(res.body);
+
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('Should be rejected if user doesnt exist', async () => {
+      const res = await request(app.getHttpServer()).post('/users/login').send({
+        email: 'no_user@gmail.com',
+        password: 'password',
+      });
+
+      logger.info(res.body);
+
+      expect(res.status).toBe(401);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('Should be able to login', async () => {
+      const res = await request(app.getHttpServer()).post('/users/login').send({
+        email: test_email,
+        password: 'password',
+      });
 
       logger.info(res.body);
 
       expect(res.status).toBe(200);
       expect(res.body.data.email).toBe(test_email);
+      expect(res.body.data.name).toBe('Wahyudi');
+      expect(res.body.data.token).toBeDefined();
+    });
+
+    // Delete user
+    afterAll(async () => {
+      await request(app.getHttpServer())
+        .delete('/users/delete-user-by-email')
+        .send({ email: test_email });
     });
   });
 });

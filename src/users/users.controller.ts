@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { WebResponse } from 'src/common/common.model';
 import {
   EmailRequest,
+  LoginRequest,
   RegisterRequest,
   UserResponse,
 } from 'src/users/users.model';
@@ -17,6 +18,16 @@ export class UsersController {
     @Body() req: RegisterRequest,
   ): Promise<WebResponse<UserResponse>> {
     const res = await this.usersService.register(req);
+
+    return {
+      data: res,
+    };
+  }
+
+  @Post('/login')
+  @HttpCode(200)
+  async login(@Body() req: LoginRequest): Promise<WebResponse<UserResponse>> {
+    const res = await this.usersService.login(req);
 
     return {
       data: res,
