@@ -3,7 +3,7 @@ type RoleType = 'CLIENT' | 'WORKER' | 'ADMIN';
 export class RegisterRequest {
   name: string;
   email: string;
-  phoneNumber: string;
+  phone: string;
   password: string;
   role: RoleType;
 }
@@ -17,7 +17,7 @@ export class EmailRequest {
 export class UserResponse {
   name: string;
   email: string;
-  phoneNumber: string;
+  phone: string;
   role: RoleType;
   token?: string;
 }

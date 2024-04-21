@@ -28,7 +28,7 @@ describe('UserController', () => {
         .send({
           email: '',
           name: '',
-          phoneNumber: '',
+          phone: '',
           password: '',
           role: '',
         });
@@ -45,7 +45,7 @@ describe('UserController', () => {
         .send({
           email: test_email,
           name: 'Wahyudi',
-          phoneNumber: '089123456789',
+          phone: '089123456789',
           password: 'password',
           role: 'CLIENT',
         });
@@ -62,7 +62,7 @@ describe('UserController', () => {
         .send({
           email: test_email,
           name: 'Wahyudi',
-          phoneNumber: '089123456789',
+          phone: '089123456789',
           password: 'password',
           role: 'CLIENT',
         });
