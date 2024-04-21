@@ -11,6 +11,9 @@ export class LoginRequest {
   email: string;
   password: string;
 }
+export class EmailRequest {
+  email: string;
+}
 export class UserResponse {
   name: string;
   email: string;

@@ -5,12 +5,13 @@ import { WinstonModule } from 'nest-winston';
 import { ErrorFilter } from 'src/common/error.filter';
 import { PrismaService } from 'src/common/prisma.service';
 import { ValidationService } from 'src/common/validation.service';
-import winston from 'winston';
+import * as winston from 'winston';
 
 @Global()
 @Module({
   imports: [
     WinstonModule.forRoot({
+      level: 'debug',
       format: winston.format.json(),
       transports: [new winston.transports.Console()],
     }),

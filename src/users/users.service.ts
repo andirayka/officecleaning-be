@@ -3,6 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'src/common/prisma.service';
 import { ValidationService } from 'src/common/validation.service';
 import {
+  EmailRequest,
   LoginRequest,
   RegisterRequest,
   UserResponse,
@@ -19,16 +20,16 @@ export class UsersService {
     private prismaService: PrismaService,
   ) {}
 
-  async register(req: RegisterRequest): Promise<UserResponse> {
-    this.logger.info(`UserService.login(${JSON.stringify(req)})`);
-    const registerReq: RegisterRequest = this.validationService.validate(
+  async register(rawReq: RegisterRequest): Promise<UserResponse> {
+    this.logger.info(`UserService.login(${JSON.stringify(rawReq)})`);
+    const validatedReq: RegisterRequest = this.validationService.validate(
       UserValidation.REGISTER,
-      req,
+      rawReq,
     );
 
     const totalUserWithSameEmail = await this.prismaService.user.count({
       where: {
-        email: registerReq.email,
+        email: validatedReq.email,
       },
     });
 
@@ -38,10 +39,30 @@ export class UsersService {
     }
 
     // Hash password
-    registerReq.password = await bcrypt.hash(registerReq.password, 10);
+    validatedReq.password = await bcrypt.hash(validatedReq.password, 10);
 
     const user = await this.prismaService.user.create({
-      data: registerReq,
+      data: validatedReq,
+    });
+
+    return {
+      email: user.email,
+      name: user.name,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+    };
+  }
+
+  async deleteUserByEmail(rawReq: EmailRequest): Promise<UserResponse> {
+    this.logger.info(`UserService.deleteUser(${JSON.stringify(rawReq)})`);
+    const validatedReq: EmailRequest = this.validationService.validate(
+      UserValidation.EMAIL,
+      rawReq,
+    );
+    const user = await this.prismaService.user.delete({
+      where: {
+        email: validatedReq.email,
+      },
     });
 
     return {
