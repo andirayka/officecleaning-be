@@ -12,6 +12,7 @@ import { UserValidation } from 'src/users/users.validation';
 import { Logger } from 'winston';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -41,7 +42,7 @@ export class UsersService {
     validatedReq.password = await bcrypt.hash(validatedReq.password, 10);
 
     const user = await this.prismaService.user.create({
-      data: validatedReq,
+      data: { ...validatedReq, token: uuid() },
     });
 
     return {
@@ -49,6 +50,7 @@ export class UsersService {
       name: user.name,
       phone: user.phone,
       role: user.role,
+      token: user.token,
     };
   }
 
@@ -88,6 +90,15 @@ export class UsersService {
       phone: user.phone,
       role: user.role,
       token: user.token,
+    };
+  }
+
+  async getUser(user: User): Promise<UserResponse> {
+    return {
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
     };
   }
 
