@@ -1,10 +1,19 @@
-import { Body, Controller, Delete, Get, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { WebResponse } from 'src/common/common.model';
 import {
   EmailRequest,
   LoginRequest,
   RegisterRequest,
+  UpdateUserRequest,
   UserResponse,
 } from 'src/users/users.model';
 import { Auth } from 'src/common/auth.decorator';
@@ -40,6 +49,19 @@ export class UsersController {
   @HttpCode(200)
   async getUser(@Auth() user: User): Promise<WebResponse<UserResponse>> {
     const res = await this.usersService.getUser(user);
+
+    return {
+      data: res,
+    };
+  }
+
+  @Patch('/update')
+  @HttpCode(200)
+  async update(
+    @Auth() user: User,
+    @Body() req: UpdateUserRequest,
+  ): Promise<WebResponse<UserResponse>> {
+    const res = await this.usersService.update(user, req);
 
     return {
       data: res,

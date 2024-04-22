@@ -21,3 +21,9 @@ export class UserResponse {
   role: RoleType;
   token?: string;
 }
+export class UpdateUserRequest {
+  name?: string;
+  phone?: string;
+  password?: string;
+  role?: RoleType;
+}

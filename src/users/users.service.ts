@@ -6,6 +6,7 @@ import {
   EmailRequest,
   LoginRequest,
   RegisterRequest,
+  UpdateUserRequest,
   UserResponse,
 } from 'src/users/users.model';
 import { UserValidation } from 'src/users/users.validation';
@@ -23,7 +24,7 @@ export class UsersService {
   ) {}
 
   async register(rawReq: RegisterRequest): Promise<UserResponse> {
-    this.logger.info(`UserService.login(${JSON.stringify(rawReq)})`);
+    this.logger.debug(`UserService.login(${JSON.stringify(rawReq)})`);
     const validatedReq: RegisterRequest = this.validationService.validate(
       UserValidation.REGISTER,
       rawReq,
@@ -55,7 +56,7 @@ export class UsersService {
   }
 
   async login(rawReq: LoginRequest): Promise<UserResponse> {
-    this.logger.info(`UserService.login(${JSON.stringify(rawReq)})`);
+    this.logger.debug(`UserService.login(${JSON.stringify(rawReq)})`);
     const validatedReq: LoginRequest = this.validationService.validate(
       UserValidation.LOGIN,
       rawReq,
@@ -102,8 +103,34 @@ export class UsersService {
     };
   }
 
+  async update(user: User, rawReq: UpdateUserRequest): Promise<UserResponse> {
+    this.logger.debug(
+      `UserService.update( ${JSON.stringify(user)} , ${JSON.stringify(rawReq)} )`,
+    );
+
+    const validatedReq: UpdateUserRequest = this.validationService.validate(
+      UserValidation.UPDATE,
+      rawReq,
+    );
+
+    for (const prop in validatedReq) {
+      if (prop !== 'password') {
+        user[prop] = validatedReq[prop];
+      } else {
+        user.password = await bcrypt.hash(validatedReq.password, 10);
+      }
+    }
+
+    return {
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
+    };
+  }
+
   async deleteUserByEmail(rawReq: EmailRequest): Promise<UserResponse> {
-    this.logger.info(`UserService.deleteUser(${JSON.stringify(rawReq)})`);
+    this.logger.debug(`UserService.deleteUser(${JSON.stringify(rawReq)})`);
     const validatedReq: EmailRequest = this.validationService.validate(
       UserValidation.EMAIL,
       rawReq,

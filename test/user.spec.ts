@@ -140,7 +140,7 @@ describe('UserController', () => {
     });
   });
 
-  describe('POST /users/get-user', () => {
+  describe('GET /users/get-user', () => {
     // Register user
     beforeAll(async () => {
       await request(app.getHttpServer()).post('/users/register').send({
@@ -175,6 +175,69 @@ describe('UserController', () => {
     //   expect(res.body.data.name).toBe('Wahyudi');
     //   expect(res.body.data.token).toBeDefined();
     // });
+
+    // Delete user
+    afterAll(async () => {
+      await request(app.getHttpServer())
+        .delete('/users/delete-user-by-email')
+        .send({ email: test_email });
+    });
+  });
+
+  describe('PATCH /users/update', () => {
+    // Register user
+    beforeAll(async () => {
+      await request(app.getHttpServer()).post('/users/register').send({
+        email: test_email,
+        name: 'Wahyudi',
+        phone: '089123456789',
+        password: 'password',
+        role: 'CLIENT',
+      });
+    });
+
+    it('Should be rejected if request is invalid', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/users/update')
+        .send({ name: '', password: '' });
+
+      logger.info(res.body);
+
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('Should be able to update name', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/users/update')
+        .send({
+          name: 'Wahyudi 2',
+        });
+
+      logger.info(res.body);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.email).toBe(test_email);
+      expect(res.body.data.name).toBe('Wahyudi 2');
+      expect(res.body.data.token).toBeDefined();
+    });
+
+    it('Should be rejected if username already exists', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/users/register')
+        .send({
+          email: test_email,
+          name: 'Wahyudi',
+          phone: '089123456789',
+          password: 'password',
+          role: 'CLIENT',
+        });
+
+      logger.info(res.body);
+
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toBeDefined();
+    });
 
     // Delete user
     afterAll(async () => {
