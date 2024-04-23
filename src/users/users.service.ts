@@ -8,7 +8,7 @@ import {
   RegisterRequest,
   UpdateUserRequest,
   UserResponse,
-} from 'src/users/users.model';
+} from 'src/users/users.dto';
 import { UserValidation } from 'src/users/users.validation';
 import { Logger } from 'winston';
 import * as bcrypt from 'bcrypt';
@@ -23,74 +23,26 @@ export class UsersService {
     private prismaService: PrismaService,
   ) {}
 
-  async register(rawReq: RegisterRequest): Promise<UserResponse> {
-    this.logger.debug(`UserService.login(${JSON.stringify(rawReq)})`);
-    const validatedReq: RegisterRequest = this.validationService.validate(
-      UserValidation.REGISTER,
+  async findOne(rawReq: EmailRequest): Promise<UserResponse> {
+    this.logger.debug(`UserService.findOne(${JSON.stringify(rawReq)})`);
+    const validatedReq: EmailRequest = this.validationService.validate(
+      UserValidation.EMAIL,
       rawReq,
     );
 
-    const totalUserWithSameEmail = await this.prismaService.user.count({
+    const user = await this.prismaService.user.findUnique({
       where: { email: validatedReq.email },
     });
-
-    // user already exists
-    if (totalUserWithSameEmail != 0) {
-      throw new HttpException('Email is already registered', 400);
-    }
-
-    // Hash password
-    validatedReq.password = await bcrypt.hash(validatedReq.password, 10);
-
-    const user = await this.prismaService.user.create({
-      data: { ...validatedReq, token: uuid() },
-    });
-
-    return {
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      role: user.role,
-      token: user.token,
-    };
-  }
-
-  async login(rawReq: LoginRequest): Promise<UserResponse> {
-    this.logger.debug(`UserService.login(${JSON.stringify(rawReq)})`);
-    const validatedReq: LoginRequest = this.validationService.validate(
-      UserValidation.LOGIN,
-      rawReq,
-    );
-
-    let user = await this.prismaService.user.findUnique({
-      where: { email: validatedReq.email },
-    });
-
     // User doesn't exist
     if (!user) {
       throw new HttpException('Username or password is invalid', 401);
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      validatedReq.password,
-      user.password,
-    );
-    // Wrong password
-    if (!isPasswordValid) {
-      throw new HttpException('Username or password is invalid', 401);
-    }
-
-    user = await this.prismaService.user.update({
-      where: { email: validatedReq.email },
-      data: { token: uuid() },
-    });
-
     return {
       email: user.email,
       name: user.name,
       phone: user.phone,
       role: user.role,
-      token: user.token,
     };
   }
 

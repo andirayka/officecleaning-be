@@ -15,7 +15,7 @@ import {
   RegisterRequest,
   UpdateUserRequest,
   UserResponse,
-} from 'src/users/users.model';
+} from 'src/users/users.dto';
 import { Auth } from 'src/common/auth.decorator';
 import { User } from '@prisma/client';
 
